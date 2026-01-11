@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚽ Adivina el Futbolista</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="title">⚽ ADIVINA EL FUTBOLISTA</h1>
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-label">Puntos</span>
+                    <div class="stat-container">
+                        <span class="stat-value" id="points">0</span>
+                        <span class="points-added" id="pointsAdded" style="display: none;"></span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Intentos</span>
+                    <span class="stat-value" id="attempts">0/10</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Game Area -->
+        <div class="game-area">
+            <!-- Left Panel: Player Image -->
+            <div class="player-panel">
+                <div class="player-image-container" id="playerImageContainer">
+                    <div class="loading-spinner" id="loadingSpinner">
+                        <div class="spinner"></div>
+                        <p>Cargando jugador...</p>
+                    </div>
+                    <img id="playerImage" class="player-image" alt="Jugador" style="display: none;">
+                </div>
+
+                <!-- Hints Panel -->
+                <div class="hints-panel">
+                    <h3 class="hints-title">🎯 PISTAS DISPONIBLES</h3>
+                    <div class="hints-grid">
+                        <button class="hint-btn" id="hintPosition" data-hint="POSITION">
+                            <span class="hint-icon">📍</span>
+                            <span class="hint-label">Posición</span>
+                            <span class="hint-cost">10 pts</span>
+                        </button>
+                        <button class="hint-btn" id="hintTeam" data-hint="TEAM">
+                            <span class="hint-icon">🏟️</span>
+                            <span class="hint-label">Equipo</span>
+                            <span class="hint-cost">20 pts</span>
+                        </button>
+                        <button class="hint-btn" id="hintDistance" data-hint="DISTANCE">
+                            <span class="hint-icon">📏</span>
+                            <span class="hint-label">Distancia Exacta</span>
+                            <span class="hint-cost">30 pts</span>
+                        </button>
+                        <button class="hint-btn" id="hintSurname" data-hint="SURNAME">
+                            <span class="hint-icon">👤</span>
+                            <span class="hint-label">Apellido</span>
+                            <span class="hint-cost">30 pts</span>
+                        </button>
+                        <button class="hint-btn" id="hintFullname" data-hint="FULLNAME">
+                            <span class="hint-icon">✨</span>
+                            <span class="hint-label">Nombre Completo</span>
+                            <span class="hint-cost">40 pts</span>
+                        </button>
+                        <button class="hint-btn" id="hintFormerteams" data-hint="FORMER_TEAMS">
+                            <span class="hint-icon">🔙</span>
+                            <span class="hint-label">Clubes Anteriores</span>
+                            <span class="hint-cost">50 pts</span>
+                        </button>
+                        <button class="hint-btn" id="hintCompass" data-hint="COMPASS">
+                            <span class="hint-icon">🧭</span>
+                            <span class="hint-label">Brújula</span>
+                            <span class="hint-cost">70 pts</span>
+                        </button>
+                        <button class="hint-btn" id="hintBirthCity" data-hint="BIRTH_CITY">
+                            <span class="hint-icon">🏙️</span>
+                            <span class="hint-label">Ciudad</span>
+                            <span class="hint-cost">80 pts</span>
+                        </button>
+
+                    </div>
+
+                    <!-- Revealed Hints -->
+                    <div class="revealed-hints" id="revealedHints"></div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Map -->
+            <div class="map-panel">
+                <div class="map-header">
+                    <h3 class="map-title">🌍 Selecciona el país del jugador</h3>
+                    <button class="btn-submit" id="submitGuess" disabled>
+                        Confirmar Selección
+                    </button>
+                </div>
+                <div id="map" class="map-container"></div>
+                <div class="map-info" id="mapInfo">
+                    Haz clic en un país del mapa
+                </div>
+            </div>
+        </div>
+
+        <!-- Feedback Panel -->
+        <div class="feedback-panel" id="feedbackPanel" style="display: none;">
+            <div class="feedback-content">
+                <span class="feedback-icon" id="feedbackIcon"></span>
+                <span class="feedback-text" id="feedbackText"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div class="modal" id="winModal">
+        <div class="modal-content win">
+            <div class="modal-icon">🏆</div>
+            <h2 class="modal-title">¡VICTORIA!</h2>
+            <p class="modal-text">¡Has adivinado correctamente!</p>
+            <div class="modal-player-info" id="winPlayerInfo"></div>
+            <button class="btn-modal" id="btnNewGameWin">Jugar de Nuevo</button>
+        </div>
+    </div>
+
+    <!-- Lose Modal -->
+    <div class="modal" id="loseModal">
+        <div class="modal-content lose">
+            <div class="modal-icon">😢</div>
+            <h2 class="modal-title">GAME OVER</h2>
+            <p class="modal-text">Se acabaron los intentos</p>
+            <div class="modal-player-info" id="losePlayerInfo"></div>
+            <button class="btn-modal" id="btnNewGameLose">Intentar de Nuevo</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="distance.js"></script>
+    <script src="api.js"></script>
+    <script src="hints.js"></script>
+    <script src="map.js"></script>
+    <script src="game.js"></script>
+</body>
+
+</html>
