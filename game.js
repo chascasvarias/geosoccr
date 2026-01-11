@@ -22,11 +22,10 @@ class FootballPlayerGame {
         this.attemptsDisplay = document.getElementById('attempts');
         this.submitBtn = document.getElementById('submitGuess');
         this.mapInfo = document.getElementById('mapInfo');
-        this.feedbackPanel = document.getElementById('feedbackPanel');
-        this.feedbackIcon = document.getElementById('feedbackIcon');
-        this.feedbackText = document.getElementById('feedbackText');
         this.revealedHints = document.getElementById('revealedHints');
         this.pointsAddedDisplay = document.getElementById('pointsAdded');
+        this.guessPopup = document.getElementById('guessPopup');
+        this.guessPopupText = document.getElementById('guessPopupText');
 
         // Modals
         this.winModal = document.getElementById('winModal');
@@ -75,8 +74,7 @@ class FootballPlayerGame {
         this.winModal.classList.remove('active');
         this.loseModal.classList.remove('active');
 
-        // Clear feedback
-        this.feedbackPanel.style.display = 'none';
+        // Clear
         this.revealedHints.innerHTML = '';
 
         // Reset map
@@ -153,11 +151,11 @@ class FootballPlayerGame {
                 return;
             }
 
-            // Show feedback
-            this.showFeedback(
-                `📍 ${selectedCountry}: ${distance} km de distancia. +${earnedPoints} puntos`,
-                'success'
-            );
+            // Track last attempted country for distance hint
+            this.hintManager.setLastAttemptedCountry(selectedCountry);
+
+            // Show feedback popup
+            this.showGuessPopup(`❌ No has acertado. +${earnedPoints} puntos`);
 
             // Check if game over
             if (this.attempts >= this.maxAttempts) {
@@ -175,7 +173,6 @@ class FootballPlayerGame {
 
         } catch (error) {
             console.error('Error processing guess:', error);
-            this.showFeedback('❌ Error al procesar la selección', 'error');
         }
     }
 
@@ -270,7 +267,7 @@ class FootballPlayerGame {
 
             this.revealHint(result.hintLabel, hintValue);
         } else {
-            this.showFeedback('❌ ' + result.message, 'error');
+            console.warn(result.message);
         }
     }
 
@@ -295,18 +292,6 @@ class FootballPlayerGame {
                 button.classList.add('purchased');
             }
         });
-    }
-
-    showFeedback(message, type) {
-        this.feedbackPanel.style.display = 'block';
-        this.feedbackPanel.className = 'feedback-panel ' + type;
-        this.feedbackText.textContent = message;
-        this.feedbackIcon.textContent = type === 'success' ? '✅' : '❌';
-
-        // Auto-hide after 3 seconds
-        setTimeout(() => {
-            this.feedbackPanel.style.display = 'none';
-        }, 3000);
     }
 
     handleWin() {
@@ -338,6 +323,24 @@ class FootballPlayerGame {
         `;
 
         this.loseModal.classList.add('active');
+    }
+
+    showGuessPopup(message) {
+        this.guessPopupText.textContent = message;
+        this.guessPopup.style.display = 'block';
+
+        // Reset animation
+        const content = this.guessPopup.querySelector('.guess-popup-content');
+        content.style.animation = 'none';
+        content.offsetHeight; // trigger reflow
+        content.style.animation = '';
+
+        // Hide after animation finishes (2s as defined in CSS)
+        setTimeout(() => {
+            if (!this.gameOver) {
+                this.guessPopup.style.display = 'none';
+            }
+        }, 2000);
     }
 
     updateUI(pointsAdded = 0) {
